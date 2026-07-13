@@ -1,0 +1,265 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================
+// ENUMS
+// =========================
+
+enum UserStatus {
+  EMAIL_PENDING
+  KYC_PENDING
+  ACTIVE
+  SUSPENDED
+  FROZEN
+  REJECTED
+}
+
+enum AccountStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  BUSINESS
+  JOINT
+  INVESTMENT
+}
+
+enum OTPType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  LOGIN
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+// =========================
+// ROLE MANAGEMENT
+// =========================
+
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roles RolePermission[]
+}
+
+// =========================
+// BANKING
+// =========================
+
+model Currency {
+  id String @id @default(uuid())
+
+  code   String @unique
+  name   String
+  symbol String
+
+  isActive Boolean @default(true)
+
+  countries Country[]
+  accounts  Account[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Country {
+  id String @id @default(uuid())
+
+  name      String
+  isoCode   String  @unique
+  phoneCode String
+  flagEmoji String?
+
+  isActive Boolean @default(true)
+
+  currencyId String
+  currency   Currency @relation(fields: [currencyId], references: [id])
+
+  users User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id String @id @default(uuid())
+
+  firstName  String
+  middleName String?
+  lastName   String
+
+  username String @unique
+
+  email String  @unique
+  phone String? @unique
+
+  password String
+
+  avatar String?
+
+  dateOfBirth DateTime?
+
+  emailVerified Boolean @default(false)
+
+  status UserStatus @default(PENDING)
+
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id])
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  accounts      Account[]
+  otps          OTP[]
+  sessions      Session[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([username])
+}
+
+model Account {
+  id String @id @default(uuid())
+
+  accountNumber String @unique
+
+  accountName String
+
+  balance Decimal @default(0) @db.Decimal(18, 2)
+
+  availableBalance Decimal @default(0) @db.Decimal(18, 2)
+
+  accountType AccountType
+
+  status AccountStatus @default(ACTIVE)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  currencyId String
+  currency   Currency @relation(fields: [currencyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountNumber])
+}
+
+model OTP {
+  id String @id @default(uuid())
+
+  code String
+
+  type OTPType
+
+  expiresAt DateTime
+
+  used Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Session {
+  id String @id @default(uuid())
+
+  refreshToken String @unique
+
+  ipAddress String?
+
+  userAgent String?
+
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  title String
+
+  message String
+
+  type NotificationType
+
+  isRead Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id String @id @default(uuid())
+
+  action String
+
+  description String?
+
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  assignedAt DateTime @default(now())
+
+  @@id([roleId, permissionId])
+}
