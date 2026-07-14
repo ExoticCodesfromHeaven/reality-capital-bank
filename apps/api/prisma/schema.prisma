@@ -4,8 +4,7 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -138,7 +137,7 @@ model User {
 
   emailVerified Boolean @default(false)
 
-  status UserStatus @default(PENDING)
+  status UserStatus @default(EMAIL_PENDING)
 
   countryId String
   country   Country @relation(fields: [countryId], references: [id])
