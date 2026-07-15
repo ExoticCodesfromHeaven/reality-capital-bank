@@ -18,7 +18,11 @@ export const registerSchema = z.object({
         "Username can only contain lowercase letters, numbers and underscores.",
     }),
 
-  email: z.email().transform((email) => email.toLowerCase()),
+  email: z
+    .string()
+    .trim()
+    .email()
+    .transform((email) => email.toLowerCase()),
 
   phone: z.string().optional(),
 
