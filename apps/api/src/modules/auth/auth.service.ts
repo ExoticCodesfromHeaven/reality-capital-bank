@@ -10,7 +10,10 @@ import { generateAccountName } from "../../utils/account-name";
 import { getCurrencyByCountry } from "../../utils/country-currency";
 import { isUsernameAvailable } from "../../utils/username";
 
-import type { RegisterInput } from "./auth.validation";
+import type { 
+  RegisterInput,
+  VerifyEmailInput,
+ } from "./auth.validation";
 
 import { emailService } from "./email.service";
 import { verifyEmailTemplate } from "../../emails/verify-email";
@@ -101,6 +104,29 @@ export const authService = {
     return {
         success: true,
         message: "Registration successful. Please verify your email.",
+    };
+  },
+
+  async verifyEmail(data: VerifyEmailInput) {
+    const otp = await authRepository.findOtp(
+      data.userId,
+      data.code
+    );
+
+    if (!otp) {
+      throw new Error("Invalid OTP.");
+    }
+
+    if (otp.expiresAt < new Date()) {
+      throw new Error("OTP has expired.");
+    }
+
+    await authRepository.markOtpUsed(otp.id);
+
+    await authRepository.verifyUser(data.userId);
+
+    return {
+      message: "Email verified successfully.",
     };
   },
 };

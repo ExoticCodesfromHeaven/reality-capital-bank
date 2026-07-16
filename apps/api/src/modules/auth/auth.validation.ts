@@ -18,11 +18,7 @@ export const registerSchema = z.object({
         "Username can only contain lowercase letters, numbers and underscores.",
     }),
 
-  email: z
-    .string()
-    .trim()
-    .email()
-    .transform((email) => email.toLowerCase()),
+  email: z.email().transform((email) => email.toLowerCase()),
 
   phone: z.string().optional(),
 
@@ -38,3 +34,15 @@ export const registerSchema = z.object({
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
+
+export const verifyEmailSchema = z.object({
+  userId: z.uuid(),
+
+  code: z
+    .string()
+    .trim()
+    .length(6, "OTP must be exactly 6 digits.")
+    .regex(/^\d+$/, "OTP must contain only numbers."),
+});
+
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
