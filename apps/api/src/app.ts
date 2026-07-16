@@ -7,6 +7,8 @@ import dotenv from "dotenv";
 
 import authRoutes from "./modules/auth/auth.routes"
 
+import { errorMiddleware } from "./middlewares/error.middleware";
+
 dotenv.config();
 
 const app = express();
@@ -32,5 +34,7 @@ app.get("/", (_req, res) => {
     message: "Reality Capital Bank API is running 🚀"
   });
 });
+
+app.use(errorMiddleware);
 
 export default app;

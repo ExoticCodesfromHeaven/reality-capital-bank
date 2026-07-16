@@ -11,6 +11,7 @@ import { getCurrencyByCountry } from "../../utils/country-currency";
 import { isUsernameAvailable } from "../../utils/username";
 
 import type { 
+  LoginInput,
   RegisterInput,
   VerifyEmailInput,
  } from "./auth.validation";
@@ -127,6 +128,55 @@ export const authService = {
 
     return {
       message: "Email verified successfully.",
+    };
+  },
+
+  async login(data: LoginInput) {
+    // 1. Find user
+    const user = await authRepository.findUserForLogin(
+      data.email
+    );
+
+    if (!user) {
+      throw new Error("Invalid email or password.");
+    }
+
+    // 2. Compare password
+    const passwordMatches =
+      await passwordService.compare(
+        data.password,
+        user.password
+      );
+
+    if (!passwordMatches) {
+      throw new Error("Invalid email or password.");
+    }
+
+    // 3. Email verified?
+    if (!user.emailVerified) {
+      throw new Error(
+        "Please verify your email before logging in."
+      );
+    }
+
+    // 4. Account active?
+    if (user.status !== UserStatus.ACTIVE) {
+      throw new Error(
+        "Your account is not active."
+      );
+    }
+
+    // JWTs come next session.
+    return {
+      message: "Login successful.",
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        email: user.email,
+        role: user.role.name,
+      },
     };
   },
 };

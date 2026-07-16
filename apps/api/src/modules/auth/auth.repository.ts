@@ -17,6 +17,18 @@ export const authRepository = {
       },
     });
   },
+
+  async findUserForLogin(email: string) {
+    return prisma.user.findUnique({
+      where: {
+        email,
+      },
+      include: {
+        role: true,
+        country: true,
+      },
+    });
+  },
   
   async createUser(data: Prisma.UserCreateInput) {
     return prisma.user.create({
