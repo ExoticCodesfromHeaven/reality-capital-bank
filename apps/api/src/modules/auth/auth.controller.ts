@@ -55,4 +55,51 @@ export const authController = {
       next(error);
     }
   },
+
+  async me(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const result = await authService.me(req.user.id);
+  
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async refresh(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { refreshToken } = req.body;
+  
+      const result = await authService.refresh(refreshToken);
+  
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async logout(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { refreshToken } = req.body;
+  
+      const result =
+        await authService.logout(refreshToken);
+  
+      res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
 };

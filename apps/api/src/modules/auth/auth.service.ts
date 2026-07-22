@@ -1,4 +1,5 @@
 import { UserStatus } from "@prisma/client";
+import { jwtService } from "../../utils/jwt";
 
 import { authRepository } from "./auth.repository";
 import { passwordService } from "./password.service";
@@ -166,9 +167,34 @@ export const authService = {
       );
     }
 
+    const accessToken =
+      jwtService.generateAccessToken(user.id);
+
+    const refreshToken =
+      jwtService.generateRefreshToken(user.id);
+
+    await authRepository.createSession({
+      refreshToken,
+
+      expiresAt: new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+      ),
+
+      user: {
+        connect: {
+          id: user.id,
+        },
+      },
+    });
+
     // JWTs come next session.
     return {
       message: "Login successful.",
+    
+      accessToken,
+    
+      refreshToken,
+    
       user: {
         id: user.id,
         firstName: user.firstName,
@@ -177,6 +203,48 @@ export const authService = {
         email: user.email,
         role: user.role.name,
       },
+    };
+  },
+
+  async me(userId: string) {
+    const user = await authRepository.findById(userId);
+  
+    if (!user) {
+      throw new Error("User not found.");
+    }
+  
+    return user;
+  },
+
+  async refresh(refreshToken: string) {
+    const session =
+      await authRepository.findSession(refreshToken);
+  
+    if (!session) {
+      throw new Error("Invalid refresh token.");
+    }
+  
+    if (session.expiresAt < new Date()) {
+      throw new Error("Refresh token expired.");
+    }
+  
+    jwtService.verifyRefreshToken(refreshToken);
+  
+    const accessToken =
+      jwtService.generateAccessToken(session.user.id);
+  
+    return {
+      accessToken,
+    };
+  },
+
+  async logout(refreshToken: string) {
+    await authRepository.deleteSession(
+      refreshToken
+    );
+  
+    return {
+      message: "Logged out successfully.",
     };
   },
 };

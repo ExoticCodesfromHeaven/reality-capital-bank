@@ -75,4 +75,50 @@ async verifyUser(userId: string) {
   });
 },
 
+async createSession(data: Prisma.SessionCreateInput) {
+  return prisma.session.create({
+    data,
+  });
+},
+
+async deleteSession(refreshToken: string) {
+  return prisma.session.deleteMany({
+    where: {
+      refreshToken,
+    },
+  });
+},
+
+async findSession(refreshToken: string) {
+  return prisma.session.findUnique({
+    where: {
+      refreshToken,
+    },
+    include: {
+      user: true,
+    },
+  });
+},
+
+async findById(id: string) {
+  return prisma.user.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      role: true,
+      country: true,
+      accounts: true,
+    },
+  });
+},
+
+async deleteSessionByUser(userId: string) {
+  return prisma.session.deleteMany({
+    where: {
+      userId,
+    },
+  });
+},
+
 };
