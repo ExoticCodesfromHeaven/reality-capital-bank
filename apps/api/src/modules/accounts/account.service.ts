@@ -39,4 +39,8 @@ export const accountService = {
       },
     });
   },
+
+  async getAccounts(userId: string) {
+    return accountRepository.findByUserId(userId);
+  },
 };

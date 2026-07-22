@@ -7,6 +7,8 @@ import dotenv from "dotenv";
 
 import authRoutes from "./modules/auth/auth.routes"
 
+import accountRoutes from "./modules/accounts/account.routes";
+
 import { errorMiddleware } from "./middlewares/error.middleware";
 
 dotenv.config();
@@ -26,6 +28,11 @@ app.use(express.json());
 
 app.use(
   cookieParser(process.env.COOKIE_SECRET)
+);
+
+app.use(
+  "/api/accounts",
+  accountRoutes
 );
 
 app.use("/api/auth", authRoutes);

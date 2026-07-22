@@ -15,4 +15,18 @@ export const accountRepository = {
       data,
     });
   },
+
+  async findByUserId(userId: string) {
+    return prisma.account.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        currency: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+  },
 };
