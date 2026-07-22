@@ -96,7 +96,21 @@ export const authController = {
   
       const result = await authService.refresh(refreshToken);
   
-      res.status(200).json(result);
+      res.cookie(
+        "refreshToken",
+        result.refreshToken,
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          signed: true,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        }
+      );
+
+      res.status(200).json({
+        accessToken: result.accessToken,
+      });
     } catch (error) {
       next(error);
     }

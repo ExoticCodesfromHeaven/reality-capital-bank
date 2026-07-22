@@ -219,22 +219,43 @@ export const authService = {
   async refresh(refreshToken: string) {
     const session =
       await authRepository.findSession(refreshToken);
-  
+
     if (!session) {
       throw new Error("Invalid refresh token.");
     }
-  
+
     if (session.expiresAt < new Date()) {
       throw new Error("Refresh token expired.");
     }
-  
+
     jwtService.verifyRefreshToken(refreshToken);
-  
+
+    // Invalidate old session
+    await authRepository.deleteSession(refreshToken);
+
     const accessToken =
       jwtService.generateAccessToken(session.user.id);
-  
+
+    const newRefreshToken =
+      jwtService.generateRefreshToken(session.user.id);
+
+    await authRepository.createSession({
+      refreshToken: newRefreshToken,
+
+      expiresAt: new Date(
+        Date.now() + 7 * 24 * 60 * 60 * 1000
+      ),
+
+      user: {
+        connect: {
+          id: session.user.id,
+        },
+      },
+    });
+
     return {
       accessToken,
+      refreshToken: newRefreshToken,
     };
   },
 
