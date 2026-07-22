@@ -50,7 +50,23 @@ export const authController = {
 
       const result = await authService.login(data);
 
-      res.status(200).json(result);
+      res.cookie(
+        "refreshToken",
+        result.refreshToken,
+        {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          signed: true,
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        }
+      );
+
+      res.status(200).json({
+        message: result.message,
+        accessToken: result.accessToken,
+        user: result.user,
+      });
     } catch (error) {
       next(error);
     }
@@ -76,7 +92,7 @@ export const authController = {
     next: NextFunction
   ) {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = req.signedCookies.refreshToken;
   
       const result = await authService.refresh(refreshToken);
   
@@ -92,10 +108,13 @@ export const authController = {
     next: NextFunction
   ) {
     try {
-      const { refreshToken } = req.body;
+      const refreshToken = 
+      req.signedCookies.refreshToken;
   
       const result =
         await authService.logout(refreshToken);
+
+        res.clearCookie("refreshToken")
   
       res.status(200).json(result);
     } catch (error) {

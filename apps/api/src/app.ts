@@ -24,7 +24,9 @@ app.use(morgan("dev"));
 
 app.use(express.json());
 
-app.use(cookieParser());
+app.use(
+  cookieParser(process.env.COOKIE_SECRET)
+);
 
 app.use("/api/auth", authRoutes);
 
