@@ -23,4 +23,22 @@ export const accountController = {
       next(error);
     }
   },
+
+  async getAccount(
+    req: Request<{ accountNumber:string }>,
+    res: Response,
+    next: NextFunction
+    ) {
+    try {
+        const account =
+        await accountService.getAccount(
+            req.params.accountNumber,
+            req.user.id
+        );
+
+        res.status(200).json(account);
+    } catch (error) {
+        next(error);
+    }
+},
 };

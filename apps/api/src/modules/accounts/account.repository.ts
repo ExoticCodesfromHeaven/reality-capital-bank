@@ -29,4 +29,19 @@ export const accountRepository = {
       },
     });
   },
+
+  async findByAccountNumberAndUser(
+    accountNumber: string,
+    userId: string
+  ) {
+    return prisma.account.findFirst({
+      where: {
+        accountNumber,
+        userId,
+      },
+      include: {
+        currency: true,
+      },
+    });
+  },
 };

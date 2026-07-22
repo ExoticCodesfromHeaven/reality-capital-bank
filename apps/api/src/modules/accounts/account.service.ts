@@ -43,4 +43,21 @@ export const accountService = {
   async getAccounts(userId: string) {
     return accountRepository.findByUserId(userId);
   },
+
+  async getAccount(
+    accountNumber: string,
+    userId: string
+  ) {
+    const account =
+      await accountRepository.findByAccountNumberAndUser(
+        accountNumber,
+        userId
+      );
+
+    if (!account) {
+      throw new Error("Account not found.");
+    }
+
+    return account;
+  },
 };

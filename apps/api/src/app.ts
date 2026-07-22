@@ -9,7 +9,14 @@ import authRoutes from "./modules/auth/auth.routes"
 
 import accountRoutes from "./modules/accounts/account.routes";
 
+import userRoutes from "./modules/users/user.routes";
+
+import transferRoutes from "./modules/transfer/transfer.routes";
+
+import transactionRoutes from "./modules/transaction/transaction.routes";
+
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { parseArgs } from "node:util";
 
 dotenv.config();
 
@@ -33,6 +40,21 @@ app.use(
 app.use(
   "/api/accounts",
   accountRoutes
+);
+
+app.use(
+  "/api/transactions",
+  transactionRoutes
+);
+
+app.use(
+  "/api/users",
+  userRoutes
+);
+
+app.use(
+  "/api/transfers",
+  transferRoutes
 );
 
 app.use("/api/auth", authRoutes);

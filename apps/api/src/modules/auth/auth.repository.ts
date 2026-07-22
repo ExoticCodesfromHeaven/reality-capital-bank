@@ -121,4 +121,26 @@ async deleteSessionByUser(userId: string) {
   });
 },
 
+async updateUser(
+  userId: string,
+  data: Prisma.UserUpdateInput
+) {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data,
+  });
+},
+
+async findByIdWithPassword(userId: string) {
+  return prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    include: {
+      role: true,
+    },
+  });
+},
 };
