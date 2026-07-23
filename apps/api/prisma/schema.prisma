@@ -74,6 +74,18 @@ enum TransactionCategory {
   REVERSAL
 }
 
+enum TransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum KYCStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // =========================
 // ROLE MANAGEMENT
 // =========================
@@ -176,6 +188,10 @@ model User {
 
   beneficiaries Beneficiary[]
 
+  kyc KYC?
+
+  approvedTransfers Transfer[] @relation("ApprovedTransfers")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -216,6 +232,28 @@ model Account {
   @@index([accountNumber])
 }
 
+model KYC {
+  id String @id @default(uuid())
+
+  status KYCStatus @default(PENDING)
+
+  idDocument String
+  addressDocument String?
+  selfie String?
+
+  rejectionReason String?
+
+  userId String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  reviewedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
 model Transaction {
   id String @id @default(uuid())
 
@@ -253,22 +291,30 @@ model Transfer {
 
   reference String @unique
 
-  amount Decimal @db.Decimal(18, 2)
+  amount Decimal @db.Decimal(18,2)
 
   narration String?
 
-  status TransactionStatus @default(PENDING)
+  status TransferStatus @default(PENDING)
 
   senderAccountId String
-  senderAccount   Account @relation("SenderTransfers", fields: [senderAccountId], references: [id])
+  senderAccount Account @relation("SenderTransfers", fields:[senderAccountId], references:[id])
 
   receiverAccountId String
-  receiverAccount   Account @relation("ReceiverTransfers", fields: [receiverAccountId], references: [id])
+  receiverAccount Account @relation("ReceiverTransfers", fields:[receiverAccountId], references:[id])
+
+  approvedById String?
+  approvedBy User? @relation("ApprovedTransfers", fields:[approvedById], references:[id])
+
+  approvedAt DateTime?
+
+  rejectionReason String?
 
   transactions Transaction[]
 
   createdAt DateTime @default(now())
 
+  @@index([status])
   @@index([senderAccountId])
   @@index([receiverAccountId])
 }

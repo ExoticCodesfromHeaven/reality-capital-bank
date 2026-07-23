@@ -5,6 +5,8 @@ import { authorize } from "../../middlewares/authorize.middleware";
 
 import { adminController } from "./admin.controller";
 
+import { adminTransferController } from "./admin.transfer.controller";
+
 const router = Router();
 
 router.get(
@@ -55,6 +57,76 @@ router.patch(
     "SUPER_ADMIN"
   ),
   adminController.unfreezeAccount
+);
+
+router.get(
+
+  "/transfers/pending",
+
+  authMiddleware,
+
+  authorize(
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+
+  adminTransferController.getPendingTransfers
+
+);
+
+
+
+router.patch(
+
+  "/transfers/:id/approve",
+
+  authMiddleware,
+
+  authorize(
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+
+  adminTransferController.approveTransfer
+
+);
+
+
+
+router.patch(
+
+  "/transfers/:id/reject",
+
+  authMiddleware,
+
+  authorize(
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+
+  adminTransferController.rejectTransfer
+
+);
+
+router.get(
+  "/transactions",
+  authMiddleware,
+  authorize(
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+  adminController.getTransactions
+);
+
+
+router.get(
+  "/transactions/:id",
+  authMiddleware,
+  authorize(
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+  adminController.getTransaction
 );
 
 export default router;

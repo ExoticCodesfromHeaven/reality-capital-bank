@@ -60,5 +60,32 @@ export const adminService = {
         );
 
         return adminMapper.account(account);
+        
+    },
+
+    async getTransactions() {
+
+        return adminRepository.getTransactions();
+
+    },
+
+
+    async getTransaction(id: string) {
+
+        const transaction =
+            await adminRepository.getTransaction(id);
+
+
+        if (!transaction) {
+
+            throw new AppError(
+                "Transaction not found.",
+                404
+            );
+
+        }
+
+
+        return transaction;
     },
 };

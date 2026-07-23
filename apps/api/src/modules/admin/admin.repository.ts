@@ -1,5 +1,5 @@
-import { prisma } from "../../lib/prisma";
 import { Prisma, AccountStatus } from "@prisma/client";
+import { prisma } from "../../lib/prisma";
 
 export const adminRepository = {
   async getDashboardStats() {
@@ -112,6 +112,90 @@ async updateAccountStatus(
     include: {
       currency: true,
       user: true,
+    },
+  });
+},
+
+async getTransactions(
+  page = 1,
+  limit = 20
+) {
+
+ const skip =
+   (page - 1) * limit;
+
+
+ const [transactions,total] =
+ await Promise.all([
+
+  prisma.transaction.findMany({
+
+    skip,
+
+    take: limit,
+
+    include:{
+      account:{
+        include:{
+          user:{
+            select:{
+              firstName:true,
+              lastName:true,
+              email:true,
+            }
+          }
+        }
+      },
+
+      transfer:true,
+    },
+
+    orderBy:{
+      createdAt:"desc"
+    }
+
+  }),
+
+
+  prisma.transaction.count()
+
+ ]);
+
+
+ return {
+   transactions,
+   pagination:{
+     page,
+     limit,
+     total,
+     pages:
+       Math.ceil(total / limit)
+   }
+ };
+
+},
+
+
+async getTransaction(id: string) {
+  return prisma.transaction.findUnique({
+    where: {
+      id,
+    },
+
+    include: {
+      account: {
+        include: {
+          user: true,
+          currency: true,
+        },
+      },
+
+      transfer: {
+        include: {
+          senderAccount: true,
+          receiverAccount: true,
+        },
+      },
     },
   });
 },

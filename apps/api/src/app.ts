@@ -29,6 +29,8 @@ import notificationRoutes from "./modules/notification/notification.routes";
 
 import adminRoutes from "./modules/admin/admin.routes";
 
+import kycRoutes from "./modules/kyc/kyc.routes";
+
 import { parseArgs } from "node:util";
 
 dotenv.config();
@@ -48,6 +50,11 @@ app.use(express.json());
 
 app.use(
   cookieParser(process.env.COOKIE_SECRET)
+);
+
+app.use(
+  "/api/kyc",
+  kycRoutes
 );
 
 app.use(

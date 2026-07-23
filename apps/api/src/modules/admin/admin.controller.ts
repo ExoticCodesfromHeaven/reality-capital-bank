@@ -116,4 +116,57 @@ async unfreezeAccount(
   }
 
 },
+
+async getTransactions(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+
+  try {
+
+    const transactions =
+      await adminService.getTransactions();
+
+    res.json({
+      success: true,
+      data: transactions,
+    });
+
+  } catch(error) {
+
+    next(error);
+
+  }
+
+},
+
+
+async getTransaction(
+  req: Request<{id:string}>,
+  res: Response,
+  next: NextFunction
+) {
+
+  try {
+
+    const transaction =
+      await adminService.getTransaction(
+        req.params.id
+      );
+
+
+    res.json({
+      success:true,
+      data:transaction,
+    });
+
+
+  } catch(error) {
+
+    next(error);
+
+  }
+
+},
 };
