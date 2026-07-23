@@ -6,9 +6,15 @@ import { accountController } from "./account.controller";
 const router = Router();
 
 router.get(
-  "/",
+  "/verify/:accountNumber",
   authMiddleware,
-  accountController.getAccounts
+  accountController.verifyAccount
+);
+
+router.get(
+  "/:accountNumber",
+  authMiddleware,
+  accountController.getAccount
 );
 
 export default router;

@@ -34,4 +34,24 @@ export const transferController = {
       next(error);
     }
   },
+
+  async getTransfers(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const transfers =
+        await transferService.getTransfers(
+          req.user.id
+        );
+
+      res.json({
+        success: true,
+        data: transfers,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

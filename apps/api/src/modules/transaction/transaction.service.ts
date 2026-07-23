@@ -1,7 +1,11 @@
-import { transactionRepository } from "./transaction.repository";
+import { accountRepository } from "../accounts/account.repository";
+import { formatAccount } from "../../utils/mappers/account.mapper";
 
 export const transactionService = {
   async getTransactions(userId: string) {
-    return transactionRepository.findByUserId(userId);
+    const accounts =
+      await accountRepository.findByUserId(userId);
+
+    return accounts.map(formatAccount);
   },
 };

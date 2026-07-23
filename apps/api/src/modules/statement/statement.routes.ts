@@ -1,20 +1,14 @@
 import { Router } from "express";
 
 import { authMiddleware } from "../auth/auth.middleware";
-import { transferController } from "./transfer.controller";
+import { statementController } from "./statement.controller";
 
 const router = Router();
 
 router.get(
   "/",
   authMiddleware,
-  transferController.getTransfers
-);
-
-router.post(
-  "/local",
-  authMiddleware,
-  transferController.localTransfer
+  statementController.getStatement
 );
 
 export default router;

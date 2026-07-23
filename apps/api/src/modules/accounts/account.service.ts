@@ -2,6 +2,8 @@ import { AccountType, AccountStatus } from "@prisma/client";
 
 import { accountRepository } from "./account.repository";
 import { generateAccountNumber } from "../../utils/account-number";
+import { AppError } from "../../errors/AppError";
+import { formatAccount } from "../../utils/mappers/account.mapper";
 
 export const accountService = {
   async createDefaultAccount(userId: string, currencyId: string, accountName: string) {
@@ -55,9 +57,39 @@ export const accountService = {
       );
 
     if (!account) {
-      throw new Error("Account not found.");
+      throw new AppError(
+        "Account not found.",
+        404
+      );
     }
 
-    return account;
+    return formatAccount(account);
+  },
+
+  async verifyAccount(accountNumber: string) {
+    const account =
+      await accountRepository.findByAccountNumber(
+        accountNumber
+      );
+
+    if (!account) {
+      throw new AppError(
+        "Account not found.",
+        404
+      );
+    }
+
+    if (account.status !== AccountStatus.ACTIVE) {
+      throw new AppError(
+        "Account is not active.",
+        400
+      );
+    }
+
+    return {
+      accountName: account.accountName,
+      accountNumber: account.accountNumber,
+      bankName: "Reality Capital Bank",
+    };
   },
 };

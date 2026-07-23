@@ -41,4 +41,24 @@ export const accountController = {
         next(error);
     }
 },
+
+async verifyAccount(
+  req: Request<{ accountNumber: string }>,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const account =
+      await accountService.verifyAccount(
+        req.params.accountNumber
+      );
+
+    res.json({
+      success: true,
+      data: account,
+    });
+  } catch (error) {
+    next(error);
+  }
+},
 };

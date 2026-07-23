@@ -6,6 +6,8 @@ import type {
 
 import { ZodError } from "zod";
 
+import { AppError } from "../errors/AppError";
+
 export function errorMiddleware(
   error: unknown,
   _req: Request,
@@ -22,8 +24,15 @@ export function errorMiddleware(
     });
   }
 
+  if (error instanceof AppError) {
+    return res.status(error.statusCode).json({
+      success: false,
+      message: error.message,
+    });
+  }
+
   if (error instanceof Error) {
-    return res.status(400).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });

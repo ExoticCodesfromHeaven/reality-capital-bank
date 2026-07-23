@@ -7,7 +7,10 @@ import {
 
 import { prisma } from "../../lib/prisma";
 import { generateReference } from "../../utils/reference"; 
-
+import { AppError } from "../../errors/AppError";
+import { notificationService } from "../notification/notification.service";
+import { maskAccountNumber } from "../../utils/mask account-number";
+import { auditService } from "../audit/audit.service";
 
 export const transferService = {
 
@@ -35,22 +38,42 @@ export const transferService = {
 
 
     if (!sender) {
-      throw new Error(
-        "Sender account not found."
+      throw new AppError(
+        "Sender account not found.",
+        404
       );
     }
 
+    if (
+      sender.status !== "ACTIVE"
+    ) {
+      throw new AppError(
+        "Sender account is frozen.",
+        403
+      );
+    }
 
     if (!receiver) {
-      throw new Error(
-        "Recipient account not found."
+      throw new AppError(
+        "Recipient account not found.",
+        404
+      );
+    }
+
+    if (
+      receiver.status !== "ACTIVE"
+    ) {
+      throw new AppError(
+        "Recipient account is frozen.",
+        403
       );
     }
 
 
     if (sender.id === receiver.id) {
-      throw new Error(
-        "You cannot transfer to your own account."
+      throw new AppError(
+        "You cannot transfer to your own account.",
+        400
       );
     }
 
@@ -58,8 +81,9 @@ export const transferService = {
     if (
       Number(sender.balance) < amount
     ) {
-      throw new Error(
-        "Insufficient balance."
+      throw new AppError(
+        "Insufficient balance.",
+        400
       );
     }
 
@@ -277,9 +301,89 @@ export const transferService = {
         }
       );
 
+      const maskedReceiver =
+        maskAccountNumber(receiver.accountNumber);
+
+      const maskedSender =
+        maskAccountNumber(sender.accountNumber);
+
+      await notificationService.create(
+        sender.userId,
+        "Transfer Successful",
+        `You sent ₦${amount.toLocaleString()} to ${receiver.accountName} (${maskedReceiver}).`,
+        "SUCCESS"
+      );
+
+      await notificationService.create(
+        receiver.userId,
+        "Money Received",
+        `${sender.accountName} (${maskedSender}) sent you ₦${amount.toLocaleString()}.`,
+        "SUCCESS"
+      );
+
+      await auditService.create(
+        sender.userId,
+        "LOCAL_TRANSFER",
+        `Transferred ₦${amount.toLocaleString()} to ${receiver.accountName}.`
+      );
+
+      await auditService.create(
+        receiver.userId,
+        "MONEY_RECEIVED",
+        `Received ₦${amount.toLocaleString()} from ${sender.accountName}.`
+      );
+
 
       return result;
 
   },
+
+  async getTransfers(userId: string) {
+    const account = await prisma.account.findFirst({
+        where: {
+        userId,
+        },
+    });
+
+    if (!account) {
+        throw new AppError(
+        "Account not found.",
+        404
+        );
+    }
+
+    return prisma.transfer.findMany({
+        where: {
+        OR: [
+            {
+            senderAccountId: account.id,
+            },
+            {
+            receiverAccountId: account.id,
+            },
+        ],
+        },
+
+        include: {
+        senderAccount: {
+            select: {
+            accountNumber: true,
+            accountName: true,
+            },
+        },
+
+          receiverAccount: {
+            select: {
+              accountNumber: true,
+              accountName: true,
+            },
+        },
+        },
+
+        orderBy: {
+        createdAt: "desc",
+        },
+    });
+    },
 
 };

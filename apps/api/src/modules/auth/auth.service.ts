@@ -19,6 +19,7 @@ import type {
 
 import { emailService } from "./email.service";
 import { verifyEmailTemplate } from "../../emails/verify-email";
+import { AppError } from "../../errors/AppError";
 
 export const authService = {
   async register(data: RegisterInput) {
@@ -26,14 +27,14 @@ export const authService = {
     const existingEmail = await authRepository.findByEmail(data.email);
 
     if (existingEmail) {
-      throw new Error("Email already exists.");
+      throw new AppError("Email already exists.", 400);
     }
 
     // 2. Check username
     const usernameAvailable = await isUsernameAvailable(data.username);
 
     if (!usernameAvailable) {
-      throw new Error("Username already taken.");
+      throw new AppError("Username already taken.", 400);
     }
 
     // 3. Hash password
@@ -116,11 +117,11 @@ export const authService = {
     );
 
     if (!otp) {
-      throw new Error("Invalid OTP.");
+      throw new AppError("Invalid OTP.", 400);
     }
 
     if (otp.expiresAt < new Date()) {
-      throw new Error("OTP has expired.");
+      throw new AppError("OTP has expired.", 400);
     }
 
     await authRepository.markOtpUsed(otp.id);
@@ -139,7 +140,7 @@ export const authService = {
     );
 
     if (!user) {
-      throw new Error("Invalid email or password.");
+      throw new AppError("Invalid email or password.", 400);
     }
 
     // 2. Compare password
@@ -150,20 +151,22 @@ export const authService = {
       );
 
     if (!passwordMatches) {
-      throw new Error("Invalid email or password.");
+      throw new AppError("Invalid email or password.", 400);
     }
 
     // 3. Email verified?
     if (!user.emailVerified) {
-      throw new Error(
-        "Please verify your email before logging in."
+      throw new AppError(
+        "Please verify your email before logging in.",
+        400
       );
     }
 
     // 4. Account active?
     if (user.status !== UserStatus.ACTIVE) {
-      throw new Error(
-        "Your account is not active."
+      throw new AppError(
+        "Your account is not active.",
+        400
       );
     }
 
@@ -210,7 +213,7 @@ export const authService = {
     const user = await authRepository.findById(userId);
   
     if (!user) {
-      throw new Error("User not found.");
+      throw new AppError("User not found.", 404);
     }
   
     return user;
@@ -221,11 +224,11 @@ export const authService = {
       await authRepository.findSession(refreshToken);
 
     if (!session) {
-      throw new Error("Invalid refresh token.");
+      throw new AppError("Invalid refresh token.", 400);
     }
 
     if (session.expiresAt < new Date()) {
-      throw new Error("Refresh token expired.");
+      throw new AppError("Refresh token expired.", 400);
     }
 
     jwtService.verifyRefreshToken(refreshToken);

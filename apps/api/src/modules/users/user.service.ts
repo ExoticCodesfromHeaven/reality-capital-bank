@@ -3,6 +3,7 @@ import { authRepository } from "../auth/auth.repository";
 import type { UpdateProfileInput } from "./user.validation";
 
 import { passwordService } from "../auth/password.service";
+import { AppError } from "../../errors/AppError";
 
 export const userService = {
   async updateProfile(
@@ -29,7 +30,7 @@ export const userService = {
       await authRepository.findByIdWithPassword(userId);
 
     if (!user) {
-      throw new Error("User not found.");
+      throw new  AppError("User not found.", 404);
     }
 
     const matches =
@@ -39,7 +40,7 @@ export const userService = {
       );
 
     if (!matches) {
-      throw new Error("Current password is incorrect.");
+      throw new AppError("Current password is incorrect.", 400);
     }
 
     const hashedPassword =

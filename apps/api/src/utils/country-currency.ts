@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { AppError } from "../errors/AppError";
 
 export async function getCurrencyByCountry(countryId: string) {
   const country = await prisma.country.findUnique({
@@ -11,7 +12,7 @@ export async function getCurrencyByCountry(countryId: string) {
   });
 
   if (!country) {
-    throw new Error("Country not found.");
+    throw new AppError("Country not found.", 404);
   }
 
   return country.currency;

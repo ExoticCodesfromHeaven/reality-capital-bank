@@ -16,6 +16,19 @@ import transferRoutes from "./modules/transfer/transfer.routes";
 import transactionRoutes from "./modules/transaction/transaction.routes";
 
 import { errorMiddleware } from "./middlewares/error.middleware";
+
+import beneficiaryRoutes from "./modules/beneficiaries/beneficiary.routes";
+
+import depositRoutes from "./modules/deposit/deposit.routes";
+
+import withdrawalRoutes from "./modules/withdrawal/withdrawal.routes";
+
+import statementRoutes from "./modules/statement/statement.routes";
+
+import notificationRoutes from "./modules/notification/notification.routes";
+
+import adminRoutes from "./modules/admin/admin.routes";
+
 import { parseArgs } from "node:util";
 
 dotenv.config();
@@ -38,6 +51,11 @@ app.use(
 );
 
 app.use(
+  "/api/admin",
+  adminRoutes
+);
+
+app.use(
   "/api/accounts",
   accountRoutes
 );
@@ -55,6 +73,31 @@ app.use(
 app.use(
   "/api/transfers",
   transferRoutes
+);
+
+app.use(
+  "/api/deposits",
+  depositRoutes
+);
+
+app.use(
+  "/api/withdrawals",
+  withdrawalRoutes
+);
+
+app.use(
+  "/api/beneficiaries",
+  beneficiaryRoutes
+);
+
+app.use(
+  "/api/statements",
+  statementRoutes
+);
+
+app.use(
+  "/api/notifications",
+  notificationRoutes
 );
 
 app.use("/api/auth", authRoutes);
