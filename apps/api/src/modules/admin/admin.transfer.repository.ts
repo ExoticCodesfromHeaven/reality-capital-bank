@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import type { TransferStatus } from "@prisma/client";
+import { TransferStatus } from "@prisma/client";
 
 export const adminTransferRepository = {
 
@@ -8,7 +8,7 @@ export const adminTransferRepository = {
     return prisma.transfer.findMany({
 
       where: {
-        status: "PENDING",
+        status: TransferStatus.PENDING
       },
 
       include: {
@@ -16,12 +16,14 @@ export const adminTransferRepository = {
         senderAccount: {
           include: {
             user: true,
+            currency: true,
           },
         },
 
         receiverAccount: {
           include: {
             user: true,
+            currency: true,
           },
         },
 
@@ -49,12 +51,14 @@ export const adminTransferRepository = {
         senderAccount: {
           include: {
             user: true,
+            currency: true,
           },
         },
 
         receiverAccount: {
           include: {
             user: true,
+            currency: true,
           },
         },
 

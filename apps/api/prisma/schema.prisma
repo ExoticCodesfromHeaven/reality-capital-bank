@@ -66,9 +66,11 @@ enum TransactionStatus {
 
 enum TransactionCategory {
   TRANSFER
+  INTERNATIONAL_TRANSFER
   DEPOSIT
   WITHDRAWAL
   INVESTMENT
+  FIXED_DEPOSIT
   INTEREST
   CHARGE
   REVERSAL
@@ -84,6 +86,73 @@ enum KYCStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum TicketStatus {
+  OPEN
+  ASSIGNED
+  WAITING_FOR_CUSTOMER
+  WAITING_FOR_SUPPORT
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum InvestmentStatus {
+  ACTIVE
+  MATURED
+  WITHDRAWN
+  CANCELLED
+}
+
+enum JointInvestmentStatus {
+  PENDING
+  ACTIVE
+  MATURED
+  WITHDRAWN
+  CANCELLED
+}
+
+enum ParticipantStatus {
+  PENDING
+  ACTIVE
+  DECLINED
+  REMOVED
+}
+
+enum FixedDepositStatus {
+  ACTIVE
+  MATURED
+  WITHDRAWN
+  CANCELLED
+}
+
+enum InternationalTransferStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+  FAILED
+}
+
+enum TransferPriority {
+  STANDARD
+  EXPRESS
+}
+
+enum MessageSender {
+  CUSTOMER
+  ADMIN
+  SYSTEM
 }
 
 // =========================
@@ -113,6 +182,19 @@ model Permission {
   roles RolePermission[]
 }
 
+model SystemSetting {
+  id String @id @default(uuid())
+
+  key String @unique
+
+  value Json
+
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // =========================
 // BANKING
 // =========================
@@ -124,10 +206,16 @@ model Currency {
   name   String
   symbol String
 
+  exchangeRate Decimal @default(1) @db.Decimal(18, 6)
+
   isActive Boolean @default(true)
 
   countries Country[]
   accounts  Account[]
+
+  internationalSenderTransfers InternationalTransfer[] @relation("InternationalSenderCurrency")
+
+internationalReceiverTransfers InternationalTransfer[] @relation("InternationalReceiverCurrency")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -192,6 +280,22 @@ model User {
 
   approvedTransfers Transfer[] @relation("ApprovedTransfers")
 
+  approvedInternationalTransfers InternationalTransfer[] @relation("ApprovedInternationalTransfers")
+
+  investments Investment[]
+
+  fixedDeposits FixedDeposit[]
+
+  supportTickets SupportTicket[]
+
+  assignedTickets SupportTicket[] @relation("AssignedTickets")
+
+  supportMessages SupportMessage[]
+
+  createdJointInvestments JointInvestment[] @relation("CreatedJointInvestments")
+
+  jointInvestmentParticipants JointInvestmentParticipant[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -220,14 +324,21 @@ model Account {
   currencyId String
   currency   Currency @relation(fields: [currencyId], references: [id])
 
-  transactions Transaction[]
+  fixedDeposits FixedDeposit[]
 
   sentTransfers Transfer[] @relation("SenderTransfers")
 
   receivedTransfers Transfer[] @relation("ReceiverTransfers")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  investments Investment[]
+
+  transactions Transaction[]
+
+  internationalTransfers InternationalTransfer[]
+
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  JointInvestmentParticipant JointInvestmentParticipant[]
 
   @@index([accountNumber])
 }
@@ -237,14 +348,14 @@ model KYC {
 
   status KYCStatus @default(PENDING)
 
-  idDocument String
+  idDocument      String
   addressDocument String?
-  selfie String?
+  selfie          String?
 
   rejectionReason String?
 
   userId String @unique
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reviewedBy String?
 
@@ -276,6 +387,10 @@ model Transaction {
   transferId String?
   transfer   Transfer? @relation(fields: [transferId], references: [id])
 
+  internationalTransferId String?
+
+  internationalTransfer InternationalTransfer? @relation(fields: [internationalTransferId], references: [id])
+
   accountId String
   account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
@@ -291,20 +406,20 @@ model Transfer {
 
   reference String @unique
 
-  amount Decimal @db.Decimal(18,2)
+  amount Decimal @db.Decimal(18, 2)
 
   narration String?
 
   status TransferStatus @default(PENDING)
 
   senderAccountId String
-  senderAccount Account @relation("SenderTransfers", fields:[senderAccountId], references:[id])
+  senderAccount   Account @relation("SenderTransfers", fields: [senderAccountId], references: [id])
 
   receiverAccountId String
-  receiverAccount Account @relation("ReceiverTransfers", fields:[receiverAccountId], references:[id])
+  receiverAccount   Account @relation("ReceiverTransfers", fields: [receiverAccountId], references: [id])
 
   approvedById String?
-  approvedBy User? @relation("ApprovedTransfers", fields:[approvedById], references:[id])
+  approvedBy   User?   @relation("ApprovedTransfers", fields: [approvedById], references: [id])
 
   approvedAt DateTime?
 
@@ -317,6 +432,247 @@ model Transfer {
   @@index([status])
   @@index([senderAccountId])
   @@index([receiverAccountId])
+}
+
+model InternationalTransfer {
+  id String @id @default(uuid())
+
+  reference String @unique
+
+  amount Decimal @db.Decimal(18,2)
+
+  fee Decimal @db.Decimal(18,2)
+
+  exchangeRate Decimal @db.Decimal(18,6)
+
+  convertedAmount Decimal @db.Decimal(18,2)
+
+  senderCurrencyId String
+  senderCurrency Currency @relation("InternationalSenderCurrency", fields: [senderCurrencyId], references: [id])
+
+
+  receiverCurrencyId String
+  receiverCurrency Currency @relation("InternationalReceiverCurrency", fields: [receiverCurrencyId], references: [id])
+
+  recipientName String
+
+  recipientAccountNumber String
+
+  recipientBankName String
+
+  recipientBankAddress String?
+
+  recipientCountry String
+
+  swiftCode String
+
+  iban String?
+
+  routingNumber String?
+
+  purpose String
+
+  priority TransferPriority @default(STANDARD)
+
+  status InternationalTransferStatus @default(PENDING)
+
+  rejectionReason String?
+
+  approvedAt DateTime?
+
+  completedAt DateTime?
+
+  senderAccountId String
+  senderAccount Account @relation( fields: [senderAccountId], references: [id])
+
+  approvedById String?
+
+  approvedBy User? @relation("ApprovedInternationalTransfers", fields: [approvedById], references: [id])
+
+  transactions Transaction[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([reference])
+  @@index([status])
+  @@index([senderAccountId])
+}
+
+model Investment {
+  id String @id @default(uuid())
+
+  amount Decimal @db.Decimal(18, 2)
+
+  interestRate Decimal @db.Decimal(5, 2)
+
+  expectedReturn Decimal @db.Decimal(18, 2)
+
+  totalAtMaturity Decimal @db.Decimal(18, 2)
+
+  durationMonths Int
+
+  status InvestmentStatus @default(ACTIVE)
+
+  startsAt DateTime @default(now())
+
+  maturesAt DateTime
+
+  withdrawnAt DateTime?
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([userId])
+}
+
+model JointInvestment {
+  id String @id @default(uuid())
+
+  name String?
+
+  amount Decimal @db.Decimal(18, 2)
+
+  interestRate Decimal @db.Decimal(5, 2)
+
+  expectedReturn Decimal @db.Decimal(18, 2)
+
+  totalAtMaturity Decimal @db.Decimal(18, 2)
+
+  durationMonths Int
+
+  status JointInvestmentStatus @default(PENDING)
+
+  startsAt DateTime?
+
+  maturesAt DateTime?
+
+  createdById String
+
+  createdBy User @relation("CreatedJointInvestments", fields: [createdById], references: [id])
+
+  participants JointInvestmentParticipant[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model JointInvestmentParticipant {
+  id String @id @default(uuid())
+
+  contribution Decimal @db.Decimal(18, 2)
+
+  ownership Decimal @db.Decimal(5, 2)
+
+  status ParticipantStatus @default(PENDING)
+
+  jointInvestmentId String
+
+  jointInvestment JointInvestment @relation(fields: [jointInvestmentId], references: [id], onDelete: Cascade)
+
+  userId String
+
+  accountId String
+
+  account Account @relation(fields: [accountId], references: [id])
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([jointInvestmentId, userId])
+}
+
+model FixedDepositPlan {
+
+  id String @id @default(uuid())
+
+
+  name String
+
+
+  durationMonths Int
+
+
+  interestRate Decimal @db.Decimal(5,2)
+
+
+  minimumAmount Decimal @db.Decimal(18,2)
+
+
+  maximumAmount Decimal? @db.Decimal(18,2)
+
+
+  isActive Boolean @default(true)
+
+
+  deposits FixedDeposit[]
+
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+}
+
+model FixedDeposit {
+
+  id String @id @default(uuid())
+
+
+  amount Decimal @db.Decimal(18,2)
+
+
+  interestRate Decimal @db.Decimal(5,2)
+
+
+  expectedInterest Decimal @db.Decimal(18,2)
+
+
+  maturityAmount Decimal @db.Decimal(18,2)
+
+
+  startsAt DateTime
+
+
+  maturesAt DateTime
+
+
+  status FixedDepositStatus @default(ACTIVE)
+
+
+  userId String
+
+  user User @relation (fields:[userId], references:[id])
+
+
+  accountId String
+
+  account Account @relation (fields:[accountId], references:[id])
+
+
+  planId String
+
+  plan FixedDepositPlan @relation ( fields:[planId], references:[id])
+
+
+  createdAt DateTime @default(now())
+
+
+  updatedAt DateTime @updatedAt
+
 }
 
 model Beneficiary {
@@ -388,6 +744,81 @@ model Notification {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SupportTicket {
+  id String @id @default(uuid())
+
+  ticketNumber String @unique
+
+  subject String
+
+  category String
+
+  priority TicketPriority @default(MEDIUM)
+
+  status TicketStatus @default(OPEN)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTickets", fields: [assignedToId], references: [id])
+
+  messages SupportMessage[]
+
+  lastMessageAt DateTime?
+
+  closedAt DateTime?
+
+  customerUnread Int @default(0)
+
+  adminUnread Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdById])
+}
+
+model SupportMessage {
+
+  id String @id @default(uuid())
+
+  message String
+
+  attachmentUrl String?
+
+  attachmentName String?
+
+  attachmentType String?
+
+  isRead Boolean @default(false)
+
+  edited Boolean @default(false)
+
+  editedAt DateTime?
+
+  isSystemMessage Boolean @default(false)
+
+  isAdmin Boolean @default(false)
+
+  ticketId String
+
+  ticket SupportTicket @relation(fields:[ticketId], references:[id], onDelete:Cascade)
+
+  senderId String
+
+  senderType MessageSender
+
+  sender User @relation(fields:[senderId], references:[id])
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+
 }
 
 model AuditLog {

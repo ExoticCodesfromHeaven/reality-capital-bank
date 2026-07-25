@@ -55,6 +55,7 @@ export const kycRepository = {
   async updateKycStatus(
     id: string,
     status: KYCStatus,
+    reviewedBy?: string,
     rejectionReason?: string
   ) {
 
@@ -66,6 +67,9 @@ export const kycRepository = {
 
       data: {
         status,
+
+          ...(reviewedBy !== undefined ? { reviewedBy } : {}),
+
         ...(rejectionReason !== undefined ? { rejectionReason } : {}),
       },
 

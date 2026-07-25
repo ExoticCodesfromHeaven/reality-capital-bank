@@ -12,6 +12,8 @@ import {
 import { maskAccountNumber } from "../../utils/mask account-number";
 import { auditService } from "../audit/audit.service";
 
+import { formatMoney } from "../../utils/currency";
+
 
 export const transferService = {
 
@@ -30,6 +32,9 @@ export const transferService = {
         where: {
           userId,
         },
+        include: {
+          currency: true,
+        },
 
       });
 
@@ -41,6 +46,9 @@ export const transferService = {
         where: {
           accountNumber:
             recipientAccountNumber,
+        },
+        include: {
+          currency: true,
         },
 
       });
@@ -194,7 +202,10 @@ export const transferService = {
 
       "Transfer Pending",
 
-      `Your transfer request of ₦${amount.toLocaleString()} to ${receiver.accountName} (${maskedReceiver}) is Pending.`,
+      `Your transfer request of ${formatMoney(
+        amount,
+        receiver.currency.symbol
+      )} to ${receiver.accountName} (${maskedReceiver}) is Pending.`,
 
       NotificationType.INFO
 
@@ -206,7 +217,10 @@ export const transferService = {
 
       "TRANSFER_REQUEST",
 
-      `Your transfer of ₦${amount.toLocaleString()} to ${receiver.accountName} (${maskedReceiver}) is pending.`
+      `Your transfer of ${formatMoney(
+        amount,
+        sender.currency.symbol
+      )} to ${receiver.accountName} (${maskedReceiver}) is pending.`
 
     );
 

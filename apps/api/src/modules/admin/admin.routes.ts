@@ -7,6 +7,12 @@ import { adminController } from "./admin.controller";
 
 import { adminTransferController } from "./admin.transfer.controller";
 
+import { adminCurrencyController } from "./admin.currency.controller";
+
+import { validate } from "../../middlewares/validate.middleware";
+
+import { updateCurrencySchema } from "./admin.currency.validation";
+
 const router = Router();
 
 router.get(
@@ -91,7 +97,34 @@ router.patch(
 
 );
 
+router.get(
+  "/currencies",
+  authMiddleware,
+  authorize("ADMIN", "SUPER_ADMIN"),
+  adminCurrencyController.getCurrencies
+);
 
+router.get(
+  "/currencies/:id",
+  authMiddleware,
+  authorize("ADMIN", "SUPER_ADMIN"),
+  adminCurrencyController.getCurrency
+);
+
+router.patch(
+  "/currencies/:id",
+  authMiddleware,
+  authorize("ADMIN", "SUPER_ADMIN"),
+  validate(updateCurrencySchema),
+  adminCurrencyController.updateCurrency
+);
+
+router.patch(
+  "/currencies/:id/toggle",
+  authMiddleware,
+  authorize("ADMIN", "SUPER_ADMIN"),
+  adminCurrencyController.toggleCurrency
+);
 
 router.patch(
 

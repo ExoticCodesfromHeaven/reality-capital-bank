@@ -117,21 +117,24 @@ export const adminMapper = {
       maskAccountNumber(
         account.accountNumber
       ),
-
-    balance:
+      
+      balance:
       account.balance,
-
-    availableBalance:
+      
+      availableBalance:
       account.availableBalance,
-
-    accountType:
+      
+      accountType:
       account.accountType,
-
-    status:
+      
+      status:
       account.status,
-
-    currency:
+      
+      currency:
       account.currency?.code,
+      
+      currencySymbol:
+        account.currency?.symbol,
 
     updatedAt:
       account.updatedAt,

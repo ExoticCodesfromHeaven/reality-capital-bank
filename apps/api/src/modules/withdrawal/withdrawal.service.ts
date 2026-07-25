@@ -7,6 +7,10 @@ import {
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../errors/AppError";
 import { generateReference } from "../../utils/reference";
+import { formatMoney } from "../../utils/currency";
+import { notificationService } from "../notification/notification.service";
+import { auditService } from "../audit/audit.service";
+import { NotificationType } from "@prisma/client";
 
 export const withdrawalService = {
   async withdraw(
@@ -24,6 +28,10 @@ export const withdrawalService = {
 
     const account =
       await prisma.account.findUnique({
+        include: {
+          currency: true,
+          user: true
+        },
         where: {
           accountNumber,
         },
@@ -94,6 +102,34 @@ export const withdrawalService = {
           },
         },
       });
+
+      await notificationService.create(
+
+      account.userId,
+
+      "Debit Alert",
+
+      `${formatMoney(
+      amount,
+      account.currency.symbol
+      )} has been debited from your account.`,
+
+      NotificationType.SUCCESS
+
+      );
+
+      await auditService.create(
+
+      account.userId,
+
+      "ACCOUNT_DEBIT",
+
+      `Account debited by ${formatMoney(
+      amount,
+      account.currency.symbol
+      )}.`
+
+      );
 
       return updatedAccount;
 

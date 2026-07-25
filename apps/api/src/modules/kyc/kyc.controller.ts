@@ -70,7 +70,8 @@ export const kycController = {
 
       const user =
         await kycService.approveKyc(
-          req.params.id
+          req.params.id,
+          req.user.id
         );
 
       res.json({
@@ -99,6 +100,7 @@ export const kycController = {
       const result =
         await kycService.rejectKyc(
           req.params.id,
+          req.user.id,
           req.body.reason
         );
 

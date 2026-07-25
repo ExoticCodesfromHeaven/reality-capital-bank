@@ -18,6 +18,7 @@ import { auditService } from "../audit/audit.service";
 
 import { adminTransferRepository } from "./admin.transfer.repository";
 
+import { formatMoney } from "../../utils/currency";
 
 export const adminTransferService = {
 
@@ -53,8 +54,8 @@ export const adminTransferService = {
 
 
     if (
-      transfer.status !== TransactionStatus.PENDING
-    ) {
+  transfer.status !== TransferStatus.PENDING
+  ) {
 
       throw new AppError(
         "Transfer already processed.",
@@ -347,43 +348,32 @@ export const adminTransferService = {
       );
 
 
-
-
-
-
-
-
     await notificationService.create(
-
       sender.userId,
 
       "Transfer Successful",
 
-      `Your transfer of ₦${Number(transfer.amount).toLocaleString()} has been approved.`,
+      `Your transfer of ${formatMoney(
+      Number(transfer.amount),
+      sender.currency.symbol
+      )} has been approved.`,
 
       NotificationType.SUCCESS
-
     );
-
-
-
-
 
     await notificationService.create(
+    receiver.userId,
 
-      receiver.userId,
+    "Money Received",
 
-      "Money Received",
+    `You received ${formatMoney(
+    Number(transfer.amount),
+    receiver.currency.symbol
+    )} from ${sender.accountName}.`,
 
-      `You received ₦${Number(transfer.amount).toLocaleString()} from ${sender.accountName}.`,
-
-      NotificationType.SUCCESS
+    NotificationType.SUCCESS
 
     );
-
-
-
-
 
 
     await auditService.create(
@@ -473,9 +463,8 @@ export const adminTransferService = {
 
       );
 
-
-
-
+      const sender =
+      transfer?.senderAccount;
 
 
 
@@ -485,16 +474,14 @@ export const adminTransferService = {
 
       "Transfer Failed",
 
-      `Your transfer of ₦${Number(transfer.amount).toLocaleString()} was rejected. Reason: ${reason}`,
+      `Your transfer of ${formatMoney(
+        Number(transfer.amount),
+        sender!.currency.symbol
+      )} failed. Reason: ${reason}`,
 
       NotificationType.ERROR
 
     );
-
-
-
-
-
 
 
     await auditService.create(
@@ -507,14 +494,6 @@ export const adminTransferService = {
 
     );
 
-
-
-
     return rejected;
-
-
   }
-
-
-
 };

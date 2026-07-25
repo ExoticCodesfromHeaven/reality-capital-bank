@@ -31,7 +31,25 @@ import adminRoutes from "./modules/admin/admin.routes";
 
 import kycRoutes from "./modules/kyc/kyc.routes";
 
-import { parseArgs } from "node:util";
+import superAdminRoutes from "./modules/super-admin/super-admin.routes";
+
+import exchangeRateRoutes from "./modules/exchange-rate/exchange-rate.routes";
+
+import masterRoutes from "./modules/master-data/master.routes";
+
+import settingsRoutes from "./modules/settings/settings.routes";
+
+import supportRoutes from "./modules/support/support.routes";
+
+import systemSettingsRoutes from "./modules/system-settings/system-settings.routes";
+
+import investmentRoutes from "./modules/investment/investment.routes";
+
+import jointInvestmentRoutes from "./modules/joint-investment/joint-investment.routes";
+
+import fixedDepositRoutes from "./modules/fixed-deposit/fixed-deposit.routes";
+
+import fixedDepositAdminRoutes from "./modules/fixed-deposit/fixed-deposit.admin.routes";
 
 dotenv.config();
 
@@ -58,8 +76,28 @@ app.use(
 );
 
 app.use(
+  "/api/super-admin",
+  superAdminRoutes
+);
+
+app.use(
   "/api/admin",
   adminRoutes
+);
+
+app.use(
+  "/api/settings",
+  settingsRoutes
+);
+
+app.use(
+  "/api/system-settings",
+  systemSettingsRoutes
+);
+
+app.use(
+  "/api/master",
+  masterRoutes
 );
 
 app.use(
@@ -78,6 +116,11 @@ app.use(
 );
 
 app.use(
+  "/api/exchange-rates",
+  exchangeRateRoutes
+);
+
+app.use(
   "/api/transfers",
   transferRoutes
 );
@@ -93,6 +136,26 @@ app.use(
 );
 
 app.use(
+  "/api/investments",
+  investmentRoutes
+);
+
+app.use(
+"/api/joint-investments",
+jointInvestmentRoutes
+);
+
+app.use(
+"/api/admin/fixed-deposits",
+fixedDepositAdminRoutes
+);
+
+app.use(
+"/api/fixed-deposits",
+fixedDepositRoutes
+);
+
+app.use(
   "/api/beneficiaries",
   beneficiaryRoutes
 );
@@ -100,6 +163,11 @@ app.use(
 app.use(
   "/api/statements",
   statementRoutes
+);
+
+app.use(
+  "/api/support",
+  supportRoutes
 );
 
 app.use(

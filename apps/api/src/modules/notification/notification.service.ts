@@ -3,6 +3,7 @@ import { NotificationType } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 
 import { formatNotification } from "../../utils/mappers/notification.mapper";
+import { registerSocketHandlers } from "../../socket/socket.handlers";
 
 export const notificationService = {
   async create(
@@ -11,7 +12,7 @@ export const notificationService = {
     message: string,
     type: NotificationType = NotificationType.INFO
   ) {
-    return prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         title,
         message,
@@ -24,6 +25,8 @@ export const notificationService = {
         },
       },
     });
+
+    return formatNotification(notification);
   },
 
   async getNotifications(userId: string) {
