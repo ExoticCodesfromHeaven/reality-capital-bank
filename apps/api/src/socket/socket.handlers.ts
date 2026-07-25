@@ -88,45 +88,33 @@ export const registerSocketHandlers = (
 
 
   socket.on(
+  "typing",
+  (ticketId: string) => {
 
-    "typing",
+    socket.to(`ticket-${ticketId}`).emit(
+      "support:typing",
+      {
+        userId: socket.user.id,
+      }
+    );
 
-    (ticketId: string) => {
-
-      socket.to(
-
-        `ticket-${ticketId}`
-
-      ).emit(
-
-        "typing"
-
-      );
-
-    }
-
-  );
+  }
+);
 
 
 
   socket.on(
+  "stop-typing",
+  (ticketId: string) => {
 
-    "stop-typing",
+    socket.to(`ticket-${ticketId}`).emit(
+      "support:stop-typing",
+      {
+        userId: socket.user.id,
+      }
+    );
 
-    (ticketId: string) => {
-
-      socket.to(
-
-        `ticket-${ticketId}`
-
-      ).emit(
-
-        "stop-typing"
-
-      );
-
-    }
-
-  );
+  }
+);
 
 };

@@ -1,6 +1,6 @@
 import { baseTemplate } from "./templates/base.template";
 
-export function verifyEmailTemplate(
+export function passwordResetTemplate(
 
   firstName: string,
 
@@ -10,7 +10,7 @@ export function verifyEmailTemplate(
 
   return baseTemplate({
 
-    title: "Verify Your Email",
+    title: "Password Reset",
 
     heading: `Hello ${firstName},`,
 
@@ -18,13 +18,13 @@ export function verifyEmailTemplate(
 
 <p>
 
-Welcome to <strong>Reality Capital Bank</strong>.
+We received a request to reset your password.
 
 </p>
 
 <p>
 
-Use the verification code below.
+Use the OTP below to continue.
 
 </p>
 
@@ -38,7 +38,7 @@ text-align:center;
 <div
 style="
 display:inline-block;
-background:#0B1F3A;
+background:#DC2626;
 color:white;
 padding:20px 40px;
 border-radius:10px;
@@ -64,7 +64,7 @@ This code expires in
 
 <p>
 
-If you didn't create an account,
+If you didn't request a password reset,
 
 please ignore this email.
 

@@ -51,6 +51,14 @@ import fixedDepositRoutes from "./modules/fixed-deposit/fixed-deposit.routes";
 
 import fixedDepositAdminRoutes from "./modules/fixed-deposit/fixed-deposit.admin.routes";
 
+import adminAnalyticsRoutes from "./modules/admin-analytics/admin-analytics.routes";
+
+import uploadRoutes from "./modules/uploads/upload-routes";
+
+import swaggerUi from "swagger-ui-express";
+
+import { swaggerSpec } from "./docs/swagger";
+
 dotenv.config();
 
 const app = express();
@@ -67,7 +75,25 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 app.use(
+
+  "/api/uploads",
+
+  uploadRoutes
+
+);
+
+app.use("/uploads", express.static("uploads"));
+
+app.use(
   cookieParser(process.env.COOKIE_SECRET)
+);
+
+app.use(
+
+  "/api/admin-analytics",
+
+  adminAnalyticsRoutes
+
 );
 
 app.use(
@@ -183,6 +209,16 @@ app.get("/", (_req, res) => {
     message: "Reality Capital Bank API is running 🚀"
   });
 });
+
+app.use(
+
+  "/docs",
+
+  swaggerUi.serve,
+
+  swaggerUi.setup(swaggerSpec)
+
+);
 
 app.use(errorMiddleware);
 

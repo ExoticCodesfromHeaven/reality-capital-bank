@@ -3,7 +3,7 @@ import { NotificationType } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 
 import { formatNotification } from "../../utils/mappers/notification.mapper";
-import { registerSocketHandlers } from "../../socket/socket.handlers";
+import { getIO } from "../../socket/socket";
 
 export const notificationService = {
   async create(
@@ -26,6 +26,20 @@ export const notificationService = {
       },
     });
 
+    const io = getIO();
+
+      io.to(
+
+          `user-${userId}`
+
+      ).emit(
+
+          "notification:new",
+
+          notification
+
+    );
+
     return formatNotification(notification);
   },
 
@@ -44,30 +58,88 @@ export const notificationService = {
   },
 
   async markAsRead(
-    notificationId: string,
-    userId: string
-  ) {
-    return prisma.notification.updateMany({
+
+  notificationId: string,
+
+  userId: string
+
+) {
+
+  const updated =
+
+    await prisma.notification.updateMany({
+
       where: {
+
         id: notificationId,
+
         userId,
+
       },
 
       data: {
-        isRead: true,
-      },
-    });
-  },
 
-  async markAllAsRead(userId: string) {
-    return prisma.notification.updateMany({
+        isRead: true,
+
+      },
+
+    });
+
+  const io = getIO();
+
+  io.to(
+
+    `user-${userId}`
+
+  ).emit(
+
+    "notification:read",
+
+    notificationId
+
+  );
+
+  return updated;
+
+},
+
+  async markAllAsRead(
+
+  userId: string
+
+) {
+
+  const updated =
+
+    await prisma.notification.updateMany({
+
       where: {
+
         userId,
+
       },
 
       data: {
+
         isRead: true,
+
       },
+
     });
-  },
+
+  const io = getIO();
+
+  io.to(
+
+    `user-${userId}`
+
+  ).emit(
+
+    "notification:all-read"
+
+  );
+
+  return updated;
+
+},
 };

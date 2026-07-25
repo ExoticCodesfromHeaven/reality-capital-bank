@@ -59,5 +59,25 @@ export type ReplyInput =
 export type UpdateStatusInput =
   z.infer<typeof updateStatusSchema>;
 
+  export const sendMessageSchema = z.object({
+
+  body: z.object({
+
+    message: z
+
+      .string()
+
+      .trim()
+
+      .min(1)
+
+      .max(5000)
+
+      .optional(),
+
+  }),
+
+});
+
 // export type AssignTicketInput =
 //   z.infer<typeof assignTicketSchema>;

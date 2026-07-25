@@ -803,8 +803,6 @@ model SupportMessage {
 
   isSystemMessage Boolean @default(false)
 
-  isAdmin Boolean @default(false)
-
   ticketId String
 
   ticket SupportTicket @relation(fields:[ticketId], references:[id], onDelete:Cascade)

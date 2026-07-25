@@ -1,5 +1,5 @@
 import { prisma }  from "../../lib/prisma";
-import { UserStatus, type Prisma }  from "@prisma/client";
+import { OTPType, UserStatus, type Prisma }  from "@prisma/client";
 
 export const authRepository = {
   async findByEmail(email: string) {
@@ -143,4 +143,87 @@ async findByIdWithPassword(userId: string) {
     },
   });
 },
+
+async deleteOtps(
+  userId: string,
+  type: Prisma.OTPWhereInput["type"]
+) {
+  const where: Prisma.OTPWhereInput = { userId };
+  if (type !== undefined) {
+    // assign when provided to satisfy exactOptionalPropertyTypes
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    where.type = type as any;
+  }
+
+  return prisma.oTP.deleteMany({ where });
+},
+
+async findOtpByType(
+  userId: string,
+  code: string,
+  type: Prisma.OTPWhereInput["type"]
+) {
+  const where: Prisma.OTPWhereInput = {
+    userId,
+    code,
+    used: false,
+  };
+  if (type !== undefined) {
+    where.type = type as any;
+  }
+
+  return prisma.oTP.findFirst({ where });
+},
+
+async updatePassword(
+  userId: string,
+  password: string
+) {
+  return prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      password,
+    },
+  });
+},
+
+async deleteAllSessions(
+  userId: string
+) {
+  return prisma.session.deleteMany({
+    where: {
+      userId,
+    },
+  });
+},
+async findPasswordResetOtp(
+  userId: string,
+  code: string
+) {
+  return prisma.oTP.findFirst({
+    where: {
+      userId,
+      code,
+      type: "PASSWORD_RESET",
+      used: false,
+    },
+  });
+},
+async invalidateOtps(
+  userId: string,
+  type: OTPType
+) {
+  return prisma.oTP.updateMany({
+    where: {
+      userId,
+      type,
+      used: false,
+    },
+    data: {
+      used: true,
+    },
+  });
+}
 };

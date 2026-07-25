@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { Prisma, TicketStatus } from "@prisma/client";
+import { AppError } from "../../errors/AppError";
 
 export const supportRepository = {
 
@@ -34,17 +35,19 @@ export const supportRepository = {
 
           create: {
 
-            message: data.message,
+    message: data.message,
 
-            sender: {
-              connect: {
-                id: data.createdById,
-              },
-            },
+    senderType: "CUSTOMER",
 
-            isAdmin: false,
+    sender: {
+        connect: {
+            id: data.createdById,
+        },
+    },
 
-          },
+    isAdmin: false,
+
+},
 
         },
 
@@ -146,7 +149,23 @@ export const supportRepository = {
 
   },
 
+  async getTicketByMessageId(
+  messageId: string
+) {
 
+  return prisma.supportMessage.findUnique({
+
+    where: {
+      id: messageId,
+    },
+
+    select: {
+      ticketId: true,
+    },
+
+  });
+
+},
 
   async createReply(
     ticketId: string,
@@ -159,23 +178,35 @@ export const supportRepository = {
 
       data: {
 
-        message,
+    message,
 
-        isAdmin,
+    isAdmin,
 
-        sender: {
-          connect: {
+    senderType: isAdmin
+        ? "ADMIN"
+        : "CUSTOMER",
+
+    sender: {
+
+        connect: {
+
             id: senderId,
-          },
+
         },
 
-        ticket: {
-          connect: {
+    },
+
+    ticket: {
+
+        connect: {
+
             id: ticketId,
-          },
+
         },
 
-      },
+    },
+
+},
 
     });
 
@@ -316,30 +347,18 @@ export const supportRepository = {
 ) {
 
   return prisma.supportMessage.create({
-
-    data,
-
-    include: {
-
-      sender: {
-
-        select: {
-
-          id: true,
-
-          firstName: true,
-
-          lastName: true,
-
-          avatar: true,
-
-        },
-
+  data,
+  include: {
+    sender: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        avatar: true,
       },
-
     },
-
-  });
+  },
+});
 
 },
 
@@ -497,5 +516,118 @@ async getTicketById(
   });
 
 },
+
+async editMessage(
+  messageId: string,
+  senderId: string,
+  message: string
+) {
+  return prisma.supportMessage.updateMany({
+
+    where: {
+      id: messageId,
+      senderId,
+    },
+
+    data: {
+      message,
+      edited: true,
+      editedAt: new Date(),
+    },
+
+  });
+},
+
+async deleteMessage(
+  messageId: string,
+  senderId: string
+) {
+
+  const existing =
+    await prisma.supportMessage.findUnique({
+
+      where: {
+        id: messageId,
+      },
+
+    });
+
+  if (!existing) {
+
+    return null;
+
+  }
+
+  if (existing.senderId !== senderId) {
+
+    throw new AppError(
+      "Unauthorized.",
+      403
+    );
+
+  }
+
+  return prisma.supportMessage.update({
+
+    where: {
+      id: messageId,
+    },
+
+    data: {
+
+      message:
+        "This message was deleted.",
+
+      attachmentUrl: null,
+
+      attachmentName: null,
+
+      attachmentType: null,
+
+      edited: false,
+
+      editedAt: null,
+
+      isSystemMessage: true,
+
+    },
+
+    include: {
+
+      sender: {
+
+        select: {
+
+          id: true,
+
+          firstName: true,
+
+          lastName: true,
+
+          avatar: true,
+
+        },
+
+      },
+
+    },
+
+  });
+
+},
+
+async getMessageById(id: string) {
+
+  return prisma.supportMessage.findUnique({
+
+    where: {
+
+      id,
+
+    },
+
+  });
+
+}
 
 };

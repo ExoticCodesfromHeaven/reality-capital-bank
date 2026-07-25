@@ -4,6 +4,8 @@ import type { UpdateProfileInput } from "./user.validation";
 
 import { passwordService } from "../auth/password.service";
 import { AppError } from "../../errors/AppError";
+import { prisma } from "../../lib/prisma";
+import { uploadService } from "../uploads/upload-service";
 
 export const userService = {
   async updateProfile(
@@ -50,4 +52,66 @@ export const userService = {
       password: hashedPassword,
     });
   },
+
+  async updateAvatar(
+
+  userId: string,
+
+  avatarUrl: string
+
+) {
+
+  const user = await prisma.user.findUnique({
+
+    where: {
+
+      id: userId,
+
+    },
+
+  });
+
+  if (!user) {
+
+    throw new AppError(
+
+      "User not found.",
+
+      404
+
+    );
+
+  }
+
+  if (user.avatar) {
+
+    await uploadService.deleteFile(
+
+      uploadService.getPublicId(
+
+        user.avatar
+
+      )!
+
+    );
+
+  }
+
+  await prisma.user.update({
+
+  where: {
+
+    id: userId,
+
+  },
+
+  data: {
+
+    avatar: avatarUrl,
+
+  },
+
+});
+
+}
 };

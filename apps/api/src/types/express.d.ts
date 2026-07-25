@@ -1,13 +1,17 @@
-import "express";
+import { Multer } from "multer";
 
 declare global {
   namespace Express {
 
+    interface UserPayload {
+      id: string;
+      role: string;
+    }
+
     interface Request {
-      user: {
-        id: string;
-        role: string;
-      };
+      user: UserPayload;
+      file?: Express.Multer.File;
+      files?: Express.Multer.File[];
     }
 
   }

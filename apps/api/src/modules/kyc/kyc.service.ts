@@ -1,5 +1,6 @@
 import { 
   KYCStatus,
+  NotificationType,
   UserStatus
 } from "@prisma/client";
 
@@ -7,6 +8,8 @@ import { kycRepository } from "./kyc.repository";
 import { AppError } from "../../errors/AppError";
 import { notificationService } from "../notification/notification.service";
 import { auditService } from "../audit/audit.service";
+import { uploadService } from "../uploads/upload-service";
+import { emailService } from "../../emails/email.service";
 
 
 export const kycService = {
@@ -93,9 +96,17 @@ export const kycService = {
 
     "Your identity verification has been approved. Your account is now fully verified.",
 
-    "SUCCESS"
+    NotificationType.SUCCESS
 
   );
+
+  await emailService.sendKycApprovedEmail(
+
+  kyc.user.email,
+
+  kyc.user.firstName
+
+);
 
   await auditService.create(
 
@@ -174,9 +185,19 @@ export const kycService = {
 
       `Your identity verification was rejected.\nReason: ${reason}`,
 
-      "ERROR"
+      NotificationType.ERROR
 
     );
+
+    await emailService.sendKycRejectedEmail(
+
+  kyc.user.email,
+
+  kyc.user.firstName,
+
+  reason
+
+);
 
     await auditService.create(
 
@@ -191,6 +212,130 @@ export const kycService = {
     return result;
 
   },
+
+  async uploadDocuments(
+
+  userId: string,
+
+  data: {
+
+    idDocument: string;
+
+    addressDocument?: string;
+
+    selfie?: string;
+
+  }
+
+) {
+
+  const existing =
+
+    await kycRepository.getByUserId(
+
+      userId
+
+    );
+
+  if (existing?.idDocument) {
+
+    const publicId =
+
+      uploadService.getPublicId(
+
+        existing.idDocument
+
+      );
+
+    if (publicId) {
+
+      await uploadService.deleteFile(
+
+        publicId
+
+      );
+
+    }
+
+  }
+
+  if (
+
+    existing?.addressDocument &&
+
+    data.addressDocument
+
+  ) {
+
+    const publicId =
+
+      uploadService.getPublicId(
+
+        existing.addressDocument
+
+      );
+
+    if (publicId) {
+
+      await uploadService.deleteFile(
+
+        publicId
+
+      );
+
+    }
+
+  }
+
+  if (
+
+    existing?.selfie &&
+
+    data.selfie
+
+  ) {
+
+    const publicId =
+
+      uploadService.getPublicId(
+
+        existing.selfie
+
+      );
+
+    if (publicId) {
+
+      await uploadService.deleteFile(
+
+        publicId
+
+      );
+
+    }
+
+  }
+
+  return kycRepository.upsertKyc(
+
+    userId,
+
+    {
+
+      idDocument: data.idDocument,
+
+      addressDocument:
+
+        data.addressDocument ?? null,
+
+      selfie:
+
+        data.selfie ?? null,
+
+    }
+
+  );
+
+}
 
 
 };

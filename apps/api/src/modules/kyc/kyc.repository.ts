@@ -101,4 +101,74 @@ export const kycRepository = {
 
   },
 
+  async getByUserId(userId: string) {
+
+  return prisma.kYC.findUnique({
+
+    where: {
+
+      userId,
+
+    },
+
+  });
+
+},
+
+async upsertKyc(
+
+  userId: string,
+
+  data: {
+
+    idDocument: string;
+
+    addressDocument?: string | null;
+
+    selfie?: string | null;
+
+  }
+
+) {
+
+  return prisma.kYC.upsert({
+
+    where: {
+
+      userId,
+
+    },
+
+    update: {
+
+      ...data,
+
+      status: KYCStatus.PENDING,
+
+      rejectionReason: null,
+
+      reviewedBy: null,
+
+    },
+
+    create: {
+
+      user: {
+
+        connect: {
+
+          id: userId,
+
+        },
+
+      },
+
+      ...data,
+
+    },
+
+  });
+
+}
+
 };

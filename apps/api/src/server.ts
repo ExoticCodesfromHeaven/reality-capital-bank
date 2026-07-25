@@ -23,10 +23,28 @@ const io =
       `user-${authSocket.user.id}`
     );
 
+    authSocket.broadcast.emit(
+      "support:user-online",
+      {
+        userId: authSocket.user.id,
+      }
+    );
+
     console.log(
       "Socket Connected",
       authSocket.id
     );
+
+    authSocket.on("disconnect", () => {
+
+    authSocket.broadcast.emit(
+      "support:user-offline",
+      {
+        userId: authSocket.user.id,
+      }
+    );
+
+});
 
     registerSocketHandlers(authSocket);
   });

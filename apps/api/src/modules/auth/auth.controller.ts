@@ -136,3 +136,111 @@ export const authController = {
     }
   },
 };
+
+export const resendVerificationOtp = async (
+
+  req: Request,
+
+  res: Response,
+
+  next: NextFunction
+
+) => {
+
+  try {
+
+    const result =
+      await authService.resendVerificationOtp(
+
+        req.body.email
+
+      );
+
+    res.json({
+
+      success: true,
+
+      data: result,
+
+    });
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+};
+
+export const resetPassword = async (
+
+  req: Request,
+
+  res: Response,
+
+  next: NextFunction
+
+) => {
+
+  try{
+
+    const result =
+      await authService.resetPassword({
+
+        email:req.body.email,
+
+        otp:req.body.otp,
+
+        password:req.body.password,
+
+      });
+
+    res.json({
+
+      success:true,
+
+      data:result,
+
+    });
+
+  }catch(error){
+
+    next(error);
+
+  }
+};
+
+export const forgotPassword = async (
+
+  req: Request,
+
+  res: Response,
+
+  next: NextFunction
+
+)=>{
+
+  try{
+
+    const result=
+      await authService.forgotPassword(
+
+        req.body.email
+
+      );
+
+    res.json({
+
+      success:true,
+
+      data:result,
+
+    });
+
+  }catch(err){
+
+    next(err);
+
+  }
+
+};

@@ -2,8 +2,6 @@ import { Socket } from "socket.io";
 
 import jwt from "jsonwebtoken";
 
-import { env } from "../env";
-
 export interface AuthenticatedSocket
   extends Socket {
 
@@ -53,14 +51,10 @@ export const socketAuthMiddleware = (
 
     }
 
-    const decoded =
-      jwt.verify(
-
-        token,
-
-        env.JWT_SECRET
-
-      ) as {
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET!
+    ) as {
 
         id: string;
 

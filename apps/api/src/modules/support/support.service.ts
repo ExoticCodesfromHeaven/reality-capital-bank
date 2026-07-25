@@ -15,6 +15,8 @@ import { auditService } from "../audit/audit.service";
 
 import { getIO } from "../../socket/socket";
 
+import { uploadService } from "../uploads/upload-service";
+
 export const supportService = {
 
   async createTicket(
@@ -433,46 +435,45 @@ export const supportService = {
   const created =
     await supportRepository.createMessage({
 
-      message,
+    message,
 
-      attachmentUrl:
-        attachmentUrl ?? null,
+    attachmentUrl: attachmentUrl ?? null,
 
-      attachmentName:
-        attachmentName ?? null,
+    attachmentName: attachmentName ?? null,
 
-      attachmentType:
-        attachmentType ?? null,
+    attachmentType: attachmentType ?? null,
 
-      isAdmin:
-        !isCustomer,
+    senderType: isCustomer
+        ? "CUSTOMER"
+        : "ADMIN",
 
-      sender:{
-        connect:{
-          id:senderId,
+    sender: {
+
+        connect: {
+
+            id: senderId,
+
         },
-      },
 
-      ticket:{
-        connect:{
-          id:ticketId,
+    },
+
+    ticket: {
+
+        connect: {
+
+            id: ticketId,
+
         },
-      },
 
-    });
+    },
+
+});
 
     const io = getIO();
 
-    io.to(
-
-      `ticket-${ticketId}`
-
-    ).emit(
-
-      "new-message",
-
+    io.to(`ticket-${ticketId}`).emit(
+      "support:new-message",
       created
-
     );
 
       if(isCustomer){
@@ -586,9 +587,187 @@ async getMessages(
 
   );
 
+  const io = getIO();
+
+io.to(`ticket-${ticketId}`).emit(
+  "support:messages-read",
+  {
+    ticketId,
+    readerId: userId,
+  }
+);
+
   return supportRepository.getMessages(
     ticketId
   );
+
+},
+
+async editMessage(
+
+  messageId: string,
+
+  senderId: string,
+
+  message: string
+
+) {
+
+  const updated =
+    await supportRepository.editMessage(
+
+      messageId,
+
+      senderId,
+
+      message
+
+    );
+
+  if (updated.count === 0) {
+
+    throw new AppError(
+
+      "Message not found or unauthorized.",
+
+      404
+
+    );
+
+  }
+
+  const io = getIO();
+
+  const ticket =
+  await supportRepository.getTicketByMessageId(
+    messageId
+  );
+
+if (!ticket) {
+
+    throw new AppError(
+        "Message not found.",
+        404
+    );
+
+}
+
+io.to(
+    `ticket-${ticket.ticketId}`
+).emit(
+    "support:message-edited",
+    {
+        messageId,
+        message,
+        edited: true,
+        editedAt: new Date(),
+    }
+);
+
+  await auditService.create(
+
+    senderId,
+
+    "SUPPORT_MESSAGE_EDITED",
+
+    `Edited support message ${messageId}`
+
+  );
+
+  return {
+
+    success: true,
+
+  };
+
+},
+
+async deleteMessage(
+
+  messageId: string,
+
+  senderId: string
+
+) {
+
+  const message =
+    await supportRepository.getMessageById(
+      messageId
+    );
+
+  if (!message) {
+
+    throw new AppError(
+
+      "Message not found.",
+
+      404
+
+    );
+
+  }
+
+  if (message.attachmentUrl) {
+
+    const publicId =
+      uploadService.getPublicId(
+        message.attachmentUrl
+      );
+
+    if (publicId) {
+
+      await uploadService.deleteFile(
+        publicId
+      );
+
+    }
+
+  }
+
+  const deleted =
+    await supportRepository.deleteMessage(
+
+      messageId,
+
+      senderId
+
+    );
+
+  if (!deleted) {
+
+    throw new AppError(
+
+      "Message not found.",
+
+      404
+
+    );
+
+  }
+
+  const io = getIO();
+
+  io.to(
+    `ticket-${deleted.ticketId}`
+  ).emit(
+
+    "support:message-deleted",
+
+    deleted
+
+  );
+
+  await auditService.create(
+
+    senderId,
+
+    "SUPPORT_MESSAGE_DELETED",
+
+    `Deleted support message ${messageId}`
+
+  );
+
+  return deleted;
 
 },
 

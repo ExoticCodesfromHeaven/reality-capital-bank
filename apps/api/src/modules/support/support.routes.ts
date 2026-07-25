@@ -8,6 +8,10 @@ import { validate } from "../../middlewares/validate.middleware";
 
 import { supportController } from "./support.controller";
 
+import { supportUpload } from "./support.upload";
+
+import { deleteMessage } from "./support.controller";
+
 import {
 
   createTicketSchema,
@@ -15,6 +19,8 @@ import {
   replySchema,
 
   updateStatusSchema,
+
+  sendMessageSchema,
 
 } from "./support.validation";
 
@@ -76,9 +82,10 @@ router.get(
 
 );
 
+
 router.post(
 
-  "/:id/reply",
+  "/:ticketId/messages",
 
   authMiddleware,
 
@@ -88,9 +95,27 @@ router.post(
     "SUPER_ADMIN"
   ),
 
-  validate(replySchema),
+  supportUpload.single("attachment"),
 
-  supportController.reply
+  validate(sendMessageSchema),
+
+  supportController.sendMessage
+
+);
+
+router.get(
+
+  "/:ticketId/messages",
+
+  authMiddleware,
+
+  authorize(
+    "CUSTOMER",
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+
+  supportController.getMessages
 
 );
 
@@ -144,6 +169,34 @@ router.patch(
   validate(updateStatusSchema),
 
   supportController.updateStatus
+
+);
+
+router.patch(
+  "/messages/:messageId",
+  authMiddleware,
+  authorize(
+    "CUSTOMER",
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+  validate(updateStatusSchema),
+  supportController.sendMessage
+);
+
+router.delete(
+
+  "/messages/:messageId",
+
+  authMiddleware,
+
+  authorize(
+    "CUSTOMER",
+    "ADMIN",
+    "SUPER_ADMIN"
+  ),
+
+  deleteMessage
 
 );
 
