@@ -5,7 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 
-import authRoutes from "./modules/auth/auth.routes"
+import authRoutes from "./modules/auth/auth.routes";
 
 import accountRoutes from "./modules/accounts/account.routes";
 
@@ -59,14 +59,18 @@ import swaggerUi from "swagger-ui-express";
 
 import { swaggerSpec } from "./docs/swagger";
 
+import countryRoutes from "./modules/country/country.routes";
+
 dotenv.config();
 
 const app = express();
 
-app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  }),
+);
 
 app.use(helmet());
 
@@ -75,149 +79,80 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 app.use(
-
   "/api/uploads",
 
-  uploadRoutes
-
+  uploadRoutes,
 );
 
 app.use("/uploads", express.static("uploads"));
 
-app.use(
-  cookieParser(process.env.COOKIE_SECRET)
-);
+app.use(cookieParser(process.env.COOKIE_SECRET));
 
 app.use(
-
   "/api/admin-analytics",
 
-  adminAnalyticsRoutes
-
+  adminAnalyticsRoutes,
 );
 
-app.use(
-  "/api/kyc",
-  kycRoutes
-);
+app.use("/api/kyc", kycRoutes);
 
-app.use(
-  "/api/super-admin",
-  superAdminRoutes
-);
+app.use("/api/countries", countryRoutes);
 
-app.use(
-  "/api/admin",
-  adminRoutes
-);
+app.use("/api/super-admin", superAdminRoutes);
 
-app.use(
-  "/api/settings",
-  settingsRoutes
-);
+app.use("/api/admin", adminRoutes);
 
-app.use(
-  "/api/system-settings",
-  systemSettingsRoutes
-);
+app.use("/api/settings", settingsRoutes);
 
-app.use(
-  "/api/master",
-  masterRoutes
-);
+app.use("/api/system-settings", systemSettingsRoutes);
 
-app.use(
-  "/api/accounts",
-  accountRoutes
-);
+app.use("/api/master", masterRoutes);
 
-app.use(
-  "/api/transactions",
-  transactionRoutes
-);
+app.use("/api/accounts", accountRoutes);
 
-app.use(
-  "/api/users",
-  userRoutes
-);
+app.use("/api/transactions", transactionRoutes);
 
-app.use(
-  "/api/exchange-rates",
-  exchangeRateRoutes
-);
+app.use("/api/users", userRoutes);
 
-app.use(
-  "/api/transfers",
-  transferRoutes
-);
+app.use("/api/exchange-rates", exchangeRateRoutes);
 
-app.use(
-  "/api/deposits",
-  depositRoutes
-);
+app.use("/api/transfers", transferRoutes);
 
-app.use(
-  "/api/withdrawals",
-  withdrawalRoutes
-);
+app.use("/api/deposits", depositRoutes);
 
-app.use(
-  "/api/investments",
-  investmentRoutes
-);
+app.use("/api/withdrawals", withdrawalRoutes);
 
-app.use(
-"/api/joint-investments",
-jointInvestmentRoutes
-);
+app.use("/api/investments", investmentRoutes);
 
-app.use(
-"/api/admin/fixed-deposits",
-fixedDepositAdminRoutes
-);
+app.use("/api/joint-investments", jointInvestmentRoutes);
 
-app.use(
-"/api/fixed-deposits",
-fixedDepositRoutes
-);
+app.use("/api/admin/fixed-deposits", fixedDepositAdminRoutes);
 
-app.use(
-  "/api/beneficiaries",
-  beneficiaryRoutes
-);
+app.use("/api/fixed-deposits", fixedDepositRoutes);
 
-app.use(
-  "/api/statements",
-  statementRoutes
-);
+app.use("/api/beneficiaries", beneficiaryRoutes);
 
-app.use(
-  "/api/support",
-  supportRoutes
-);
+app.use("/api/statements", statementRoutes);
 
-app.use(
-  "/api/notifications",
-  notificationRoutes
-);
+app.use("/api/support", supportRoutes);
+
+app.use("/api/notifications", notificationRoutes);
 
 app.use("/api/auth", authRoutes);
 
 app.get("/", (_req, res) => {
   res.json({
     success: true,
-    message: "Reality Capital Bank API is running 🚀"
+    message: "Reality Capital Bank API is running 🚀",
   });
 });
 
 app.use(
-
   "/docs",
 
   swaggerUi.serve,
 
-  swaggerUi.setup(swaggerSpec)
-
+  swaggerUi.setup(swaggerSpec),
 );
 
 app.use(errorMiddleware);

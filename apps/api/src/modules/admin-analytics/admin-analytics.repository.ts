@@ -1,10 +1,6 @@
-import { prisma } from "../../config/prisma";
+import { prisma } from "../../../src/lib/prisma";
 
-import {
-  AccountStatus,
-  KYCStatus,
-  UserStatus,
-} from "@prisma/client";
+import { AccountStatus, KYCStatus, UserStatus } from "@prisma/client";
 
 export const adminAnalyticsRepository = {
   // =========================
