@@ -1,23 +1,20 @@
-// src/layouts/CustomerLayout.tsx
-
 import { Outlet } from "react-router-dom";
-import AppSidebar from "@/components/layout/Sidebar";
-import Navbar from "@/components/layout/Navbar";
 
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import Sidebar from "@/components/dashboard/Sidebar";
+import Navbar from "../components/dashboard/Navbar";
 
 export default function CustomerLayout() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
+    <div className="flex h-screen bg-slate-100">
+      <Sidebar />
 
-      <SidebarInset>
+      <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
 
-        <main className="flex-1 bg-background p-6">
+        <main className="flex-1 overflow-y-auto p-8">
           <Outlet />
         </main>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </div>
   );
 }
